@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://img.youtube.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;">
+<title>Snatch</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg:     #08080e;
+  --bg2:    #0e0e18;
+  --bg3:    #13131f;
+  --bg4:    #1b1b2e;
+  --border: rgba(255,255,255,0.06);
+  --border2:rgba(255,255,255,0.11);
+  --accent: #6c4ef2;
+  --accent2:#9b7ef8;
+  --accent3:#c4b5fd;
+  --green:  #22d3a0;
+  --red:    #f25c5c;
+  --yellow: #f2b84b;
+  --text:   #dde3f0;
+  --text2:  #8896b0;
+  --text3:  #3f4c6b;
+  --glow:   rgba(108,78,242,0.18);
+}
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ── TITLEBAR ── */
+.titlebar {
+  -webkit-app-region: drag;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 0 16px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.titlebar-left { display:flex; align-items:center; gap:10px; }
+
+.titlebar-icon {
+  width:26px; height:26px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius:7px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:12px;
+  box-shadow: 0 0 14px var(--glow);
+}
+
+.titlebar-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.titlebar-name span { color: var(--accent2); }
+
+.titlebar-controls {
+  -webkit-app-region: no-drag;
+  display: flex;
+  gap: 6px;
+}
+
+.win-btn {
+  width:12px; height:12px;
+  border-radius:50%;
+  border:none; cursor:pointer;
+  transition: opacity 0.15s;
+}
+.win-btn:hover { opacity:0.75; }
+.btn-close   { background: #ff5f57; }
+.btn-min     { background: #ffbd2e; }
+.btn-max     { background: #28c840; }
+
+/* ── TABS ── */
+.tabs {
+  display:flex;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  flex-shrink:0;
+}
+
+.tab {
+  padding: 12px 18px;
+  font-size:11px;
+  color: var(--text3);
+  cursor:pointer;
+  border:none; background:none;
+  font-family:'JetBrains Mono',monospace;
+  letter-spacing:0.04em;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  -webkit-app-region: no-drag;
+}
+
+.tab:hover { color:var(--text2); }
+.tab.active { color:var(--accent3); border-bottom-color:var(--accent); }
+
+/* ── CONTENT ── */
+.content {
+  flex:1;
+  overflow-y:auto;
+  padding: 24px 24px 32px;
+  -webkit-app-region: no-drag;
+}
+
+.content::-webkit-scrollbar { width:3px; }
+.content::-webkit-scrollbar-track { background:transparent; }
+.content::-webkit-scrollbar-thumb { background:var(--bg4); border-radius:2px; }
+
+.panel { display:none; }
+.panel.active { display:block; }
+
+/* ── CARD ── */
+.card {
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:20px;
+  margin-bottom:14px;
+}
+
+.card-label {
+  font-size:9px;
+  color:var(--text3);
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  margin-bottom:14px;
+}
+
+/* ── URL INPUT ── */
+.url-row {
+  display:flex; gap:8px;
+  margin-bottom:14px;
+}
+
+.url-input {
+  flex:1;
+  background:var(--bg3);
+  border:1px solid var(--border2);
+  border-radius:9px;
+  padding:12px 14px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  color:var(--text);
+  outline:none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  user-select:text;
+}
+
+.url-input:focus {
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(108,78,242,0.12);
+}
+
+.url-input::placeholder { color:var(--text3); }
+
+.icon-btn {
+  background:var(--bg3);
+  border:1px solid var(--border2);
+  border-radius:9px;
+  padding:0 14px;
+  font-size:11px;
+  color:var(--text2);
+  cursor:pointer;
+  font-family:'JetBrains Mono',monospace;
+  white-space:nowrap;
+  transition: all 0.15s;
+}
+
+.icon-btn:hover { border-color:var(--accent); color:var(--accent3); }
+
+/* ── VIDEO INFO ── */
+.video-info {
+  display:none;
+  background:var(--bg3);
+  border:1px solid var(--border2);
+  border-radius:10px;
+  padding:12px;
+  margin-bottom:14px;
+  align-items:center;
+  gap:12px;
+  animation: fadeUp 0.25s ease;
+}
+
+.video-info.visible { display:flex; }
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.video-thumb {
+  width:80px; height:50px;
+  border-radius:6px;
+  overflow:hidden;
+  flex-shrink:0;
+  background:var(--bg4);
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text3); font-size:20px;
+}
+
+.video-thumb img { width:100%; height:100%; object-fit:cover; }
+
+.video-meta { flex:1; min-width:0; }
+
+.video-title {
+  font-family:'Syne',sans-serif;
+  font-size:13px;
+  font-weight:700;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  margin-bottom:4px;
+}
+
+.video-sub { font-size:10px; color:var(--text2); }
+
+.video-loading {
+  font-size:10px; color:var(--text3);
+  display:flex; align-items:center; gap:8px;
+}
+
+.spinner {
+  width:12px; height:12px;
+  border:2px solid var(--border2);
+  border-top-color:var(--accent2);
+  border-radius:50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── FORMAT ROW ── */
+.format-row {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:16px;
+}
+
+.field-label {
+  font-size:9px;
+  color:var(--text3);
+  letter-spacing:0.08em;
+  margin-bottom:5px;
+}
+
+select, .field-input {
+  width:100%;
+  background:var(--bg3);
+  border:1px solid var(--border2);
+  border-radius:8px;
+  padding:9px 11px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  color:var(--text);
+  outline:none;
+  cursor:pointer;
+  appearance:none;
+  transition:border-color 0.2s;
+  user-select:text;
+}
+
+select:focus, .field-input:focus {
+  border-color:var(--accent);
+}
+
+/* ── DOWNLOAD BTN ── */
+.dl-btn {
+  width:100%;
+  padding:13px;
+  background: linear-gradient(135deg, #6c4ef2, #9b59d4);
+  border:none; border-radius:10px;
+  font-family:'Syne',sans-serif;
+  font-size:13px; font-weight:800;
+  color:#fff; cursor:pointer;
+  letter-spacing:0.06em;
+  transition: all 0.2s;
+  position:relative; overflow:hidden;
+}
+
+.dl-btn::after {
+  content:'';
+  position:absolute; inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.1),transparent);
+  opacity:0; transition:opacity 0.2s;
+}
+
+.dl-btn:hover::after { opacity:1; }
+.dl-btn:hover { transform:translateY(-1px); box-shadow:0 8px 28px rgba(108,78,242,0.4); }
+.dl-btn:active { transform:translateY(0); }
+.dl-btn:disabled { opacity:0.45; cursor:not-allowed; transform:none; box-shadow:none; }
+
+/* ── PROGRESS ── */
+.progress-wrap {
+  margin-top:14px;
+  display:none;
+  animation:fadeUp 0.2s ease;
+}
+
+.progress-wrap.visible { display:block; }
+
+.progress-top {
+  display:flex; justify-content:space-between;
+  margin-bottom:7px;
+}
+
+.progress-label { font-size:10px; color:var(--text2); }
+.progress-pct   { font-size:10px; color:var(--accent2); font-weight:600; }
+
+.progress-bg {
+  height:3px; background:var(--bg4);
+  border-radius:3px; overflow:hidden;
+}
+
+.progress-fill {
+  height:100%;
+  background:linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius:3px;
+  width:0%;
+  transition:width 0.35s ease;
+  box-shadow:0 0 8px var(--glow);
+}
+
+.progress-status {
+  font-size:9px; color:var(--text3);
+  margin-top:6px; min-height:12px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* ── SUCCESS BANNER ── */
+.success-banner {
+  display:none;
+  background:rgba(34,211,160,0.08);
+  border:1px solid rgba(34,211,160,0.2);
+  border-radius:10px;
+  padding:12px 16px;
+  margin-top:14px;
+  align-items:center;
+  gap:12px;
+  animation:fadeUp 0.25s ease;
+}
+
+.success-banner.visible { display:flex; }
+.success-icon { font-size:20px; }
+.success-text { flex:1; }
+.success-title { font-size:12px; color:var(--green); font-weight:600; margin-bottom:2px; }
+.success-path  { font-size:10px; color:var(--text3); }
+.open-btn {
+  background:rgba(34,211,160,0.12);
+  border:1px solid rgba(34,211,160,0.25);
+  border-radius:7px;
+  padding:7px 12px;
+  font-size:10px; color:var(--green);
+  cursor:pointer; font-family:'JetBrains Mono',monospace;
+  transition:all 0.15s;
+}
+.open-btn:hover { background:rgba(34,211,160,0.2); }
+
+/* ── HISTORY ── */
+.history-item {
+  display:flex; align-items:center; gap:12px;
+  padding:11px 0;
+  border-bottom:1px solid var(--border);
+  animation:fadeUp 0.25s ease;
+}
+.history-item:last-child { border-bottom:none; }
+
+.h-dot {
+  width:7px; height:7px; border-radius:50%; flex-shrink:0;
+}
+.h-dot.done  { background:var(--green); box-shadow:0 0 5px rgba(34,211,160,0.5); }
+.h-dot.error { background:var(--red);   box-shadow:0 0 5px rgba(242,92,92,0.5); }
+
+.h-info { flex:1; min-width:0; }
+.h-title { font-size:11px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
+.h-url   { font-size:9px;  color:var(--text3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.h-time  { font-size:9px;  color:var(--text3); flex-shrink:0; }
+
+.empty-state {
+  text-align:center; padding:48px 0;
+  color:var(--text3); font-size:11px;
+}
+
+/* ── SETTINGS ── */
+.setting-row { margin-bottom:14px; }
+.s-label { font-size:9px; color:var(--text2); letter-spacing:0.08em; margin-bottom:5px; }
+.s-hint  { font-size:9px; color:var(--text3); margin-top:4px; }
+
+.save-settings-btn {
+  background:var(--bg3);
+  border:1px solid var(--border2);
+  border-radius:8px;
+  padding:9px 18px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px; color:var(--accent2);
+  cursor:pointer;
+  transition:all 0.15s;
+  margin-top:4px;
+}
+.save-settings-btn:hover { border-color:var(--accent); background:rgba(108,78,242,0.1); }
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(60px);
+  background:var(--bg3); border:1px solid var(--border2);
+  border-radius:10px; padding:10px 18px;
+  font-size:11px; color:var(--text);
+  z-index:999; opacity:0;
+  transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  white-space:nowrap;
+}
+.toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+.toast.ok   { border-color:rgba(34,211,160,0.3); }
+.toast.err  { border-color:rgba(242,92,92,0.3); }
+</style>
+</head>
+<body>
+
+<!-- TITLEBAR -->
+<div class="titlebar">
+  <div class="titlebar-left">
+    <div class="titlebar-icon">▶</div>
+    <div class="titlebar-name">Sna<span>tch</span></div>
+  </div>
+  <div class="titlebar-controls">
+    <button class="win-btn btn-close" onclick="window.api.close()"></button>
+    <button class="win-btn btn-min"   onclick="window.api.minimize()"></button>
+    <button class="win-btn btn-max"   onclick="window.api.maximize()"></button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="tab('download')">⬇ Скачать</button>
+  <button class="tab"        onclick="tab('history')">◷ История</button>
+  <button class="tab"        onclick="tab('settings')">◈ Настройки</button>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- DOWNLOAD -->
+  <div class="panel active" id="tab-download">
+    <div class="card">
+      <div class="card-label">// ссылка на видео</div>
+
+      <div class="url-row">
+        <input class="url-input" id="urlInput" type="text"
+          placeholder="https://www.youtube.com/watch?v=..." />
+        <button class="icon-btn" onclick="pasteUrl()">вставить</button>
+        <button class="icon-btn" onclick="fetchInfo()">инфо</button>
+      </div>
+
+      <div class="video-info" id="videoInfo">
+        <div class="video-thumb" id="videoThumb">▶</div>
+        <div class="video-meta" id="videoMeta">
+          <div class="video-loading">
+            <div class="spinner"></div>
+            <span>Загрузка информации...</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="format-row">
+        <div>
+          <div class="field-label">ФОРМАТ / КАЧЕСТВО</div>
+          <select id="formatSelect">
+            <option value="bestvideo+bestaudio">Лучшее качество (MP4)</option>
+            <option value="1080p">1080p MP4</option>
+            <option value="720p">720p MP4</option>
+            <option value="480p">480p MP4</option>
+            <option value="360p">360p MP4</option>
+            <option value="audio">Только аудио (MP3)</option>
+          </select>
+        </div>
+        <div>
+          <div class="field-label">ПАПКА СОХРАНЕНИЯ</div>
+          <input class="field-input" id="outputPath" type="text" readonly
+            style="cursor:default;" />
+        </div>
+      </div>
+
+      <button class="dl-btn" id="dlBtn" onclick="startDownload()">
+        ▶ &nbsp; СКАЧАТЬ ВИДЕО
+      </button>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-top">
+          <span class="progress-label" id="progressLabel">Подготовка...</span>
+          <span class="progress-pct"   id="progressPct">0%</span>
+        </div>
+        <div class="progress-bg">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-status" id="progressStatus"></div>
+      </div>
+
+      <div class="success-banner" id="successBanner">
+        <div class="success-icon">✓</div>
+        <div class="success-text">
+          <div class="success-title">Видео скачано!</div>
+          <div class="success-path" id="successPath"></div>
+        </div>
+        <button class="open-btn" id="openFolderBtn">Открыть папку</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="panel" id="tab-history">
+    <div class="card">
+      <div class="card-label">// история загрузок</div>
+      <div id="historyList"><div class="empty-state">Загрузок пока нет</div></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="panel" id="tab-settings">
+    <div class="card">
+      <div class="card-label">// пути к программам</div>
+
+      <div class="setting-row">
+        <div class="s-label">YT-DLP PATH</div>
+        <input class="field-input" id="s-ytdlp" type="text" style="user-select:text;" />
+        <div class="s-hint">C:/yt-dlp/yt-dlp.exe</div>
+      </div>
+      <div class="setting-row">
+        <div class="s-label">FFMPEG PATH</div>
+        <input class="field-input" id="s-ffmpeg" type="text" style="user-select:text;" />
+        <div class="s-hint">C:/yt-dlp/ffmpeg.exe</div>
+      </div>
+      <div class="setting-row">
+        <div class="s-label">FFPROBE PATH</div>
+        <input class="field-input" id="s-ffprobe" type="text" style="user-select:text;" />
+        <div class="s-hint">C:/yt-dlp/ffprobe.exe</div>
+      </div>
+      <div class="setting-row">
+        <div class="s-label">ПАПКА ЗАГРУЗКИ</div>
+        <input class="field-input" id="s-dlpath" type="text" style="user-select:text;" />
+      </div>
+
+      <button class="save-settings-btn" onclick="saveSettings()">✓ Сохранить</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let settings = {}
+let history = []
+let downloading = false
+let lastDownloadPath = ''
+
+// ── INIT ──
+async function init() {
+  settings = await window.api.getSettings()
+  applySettings()
+  history = JSON.parse(localStorage.getItem('tt_history') || '[]')
+
+  window.api.onProgress(onProgress)
+}
+
+function applySettings() {
+  document.getElementById('s-ytdlp').value   = settings.ytdlpPath  || ''
+  document.getElementById('s-ffmpeg').value  = settings.ffmpegPath || ''
+  document.getElementById('s-ffprobe').value = settings.ffprobePath|| ''
+  document.getElementById('s-dlpath').value  = settings.downloadPath|| ''
+  document.getElementById('outputPath').value= settings.downloadPath|| ''
+}
+
+// ── TABS ──
+function tab(name) {
+  document.querySelectorAll('.tab').forEach((t,i)=> {
+    t.classList.toggle('active', ['download','history','settings'][i]===name)
+  })
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'))
+  document.getElementById('tab-'+name).classList.add('active')
+  if(name==='history') renderHistory()
+}
+
+// ── PASTE ──
+async function pasteUrl() {
+  try {
+    const text = await navigator.clipboard.readText()
+    document.getElementById('urlInput').value = text
+    if(isUrl(text)) fetchInfo()
+  } catch { toast('Разрешите доступ к буферу обмена','err') }
+}
+
+function isUrl(s) {
+  try { new URL(s); return true } catch { return false }
+}
+
+// ── FETCH INFO ──
+async function fetchInfo() {
+  const url = document.getElementById('urlInput').value.trim()
+  if(!url || !isUrl(url)) { toast('Введите корректную ссылку','err'); return }
+
+  const info = document.getElementById('videoInfo')
+  const meta = document.getElementById('videoMeta')
+  const thumb= document.getElementById('videoThumb')
+
+  info.classList.add('visible')
+  meta.innerHTML = '<div class="video-loading"><div class="spinner"></div><span>Загрузка информации...</span></div>'
+  thumb.innerHTML = '▶'
+
+  try {
+    const data = await window.api.getInfo({ url, ytdlpPath: settings.ytdlpPath })
+    thumb.innerHTML = data.thumbnail
+      ? `<img src="${data.thumbnail}" onerror="this.parentElement.innerHTML='▶'">`
+      : '▶'
+    const dur = data.duration ? fmtDur(data.duration) : ''
+    meta.innerHTML = `
+      <div class="video-title">${esc(data.title)}</div>
+      <div class="video-sub">${esc(data.uploader||'')} ${ dur ? '· '+dur : ''}</div>
+    `
+  } catch(e) {
+    meta.innerHTML = `<div class="video-sub" style="color:var(--red)">${esc(e.message)}</div>`
+  }
+}
+
+function fmtDur(s) {
+  const m=Math.floor(s/60), sec=s%60
+  return `${m}:${String(sec).padStart(2,'0')}`
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+}
+
+// ── DOWNLOAD ──
+async function startDownload() {
+  if(downloading) return
+  const url = document.getElementById('urlInput').value.trim()
+  if(!url || !isUrl(url)) { toast('Введите корректную ссылку','err'); return }
+
+  downloading = true
+  const btn = document.getElementById('dlBtn')
+  btn.disabled = true
+  btn.textContent = '⏳  СКАЧИВАНИЕ...'
+
+  document.getElementById('progressWrap').classList.add('visible')
+  document.getElementById('successBanner').classList.remove('visible')
+  setProgress(0, 'Подготовка...', 'Запуск yt-dlp')
+
+  try {
+    const result = await window.api.download({
+      url,
+      format:       document.getElementById('formatSelect').value,
+      downloadPath: settings.downloadPath,
+      ytdlpPath:    settings.ytdlpPath,
+      ffmpegPath:   settings.ffmpegPath
+    })
+
+    setProgress(100, 'Готово!', '')
+    lastDownloadPath = result.downloadPath
+
+    const banner = document.getElementById('successBanner')
+    document.getElementById('successPath').textContent = result.downloadPath
+    document.getElementById('openFolderBtn').onclick = () => window.api.openFolder(result.downloadPath)
+    banner.classList.add('visible')
+
+    addHistory(url, 'done')
+    toast('Видео скачано!', 'ok')
+  } catch(e) {
+    setProgress(0, 'Ошибка', e.message)
+    document.getElementById('progressStatus').style.color = 'var(--red)'
+    addHistory(url, 'error')
+    toast('Ошибка: ' + e.message, 'err')
+  } finally {
+    downloading = false
+    btn.disabled = false
+    btn.textContent = '▶  СКАЧАТЬ ВИДЕО'
+  }
+}
+
+function onProgress({ percent, status }) {
+  if(percent >= 0) setProgress(percent, 'Скачивание...', status)
+  else document.getElementById('progressStatus').textContent = status
+}
+
+function setProgress(pct, label, status) {
+  document.getElementById('progressFill').style.width  = pct + '%'
+  document.getElementById('progressPct').textContent   = Math.round(pct) + '%'
+  document.getElementById('progressLabel').textContent = label
+  document.getElementById('progressStatus').textContent= status
+}
+
+// ── HISTORY ──
+function addHistory(url, status) {
+  history.unshift({ url, status, time: new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'}) })
+  if(history.length>100) history.pop()
+  localStorage.setItem('tt_history', JSON.stringify(history))
+}
+
+function renderHistory() {
+  const el = document.getElementById('historyList')
+  if(!history.length) { el.innerHTML='<div class="empty-state">Загрузок пока нет</div>'; return }
+  el.innerHTML = history.map(h=>`
+    <div class="history-item">
+      <div class="h-dot ${h.status}"></div>
+      <div class="h-info">
+        <div class="h-title">${esc(h.url)}</div>
+      </div>
+      <div class="h-time">${h.time}</div>
+    </div>
+  `).join('')
+}
+
+// ── SETTINGS ──
+async function saveSettings() {
+  settings = {
+    ytdlpPath:    document.getElementById('s-ytdlp').value.trim(),
+    ffmpegPath:   document.getElementById('s-ffmpeg').value.trim(),
+    ffprobePath:  document.getElementById('s-ffprobe').value.trim(),
+    downloadPath: document.getElementById('s-dlpath').value.trim()
+  }
+  await window.api.saveSettings(settings)
+  document.getElementById('outputPath').value = settings.downloadPath
+  toast('Настройки сохранены', 'ok')
+}
+
+// ── TOAST ──
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast')
+  t.textContent = msg
+  t.className = 'toast '+type+' show'
+  setTimeout(()=> t.classList.remove('show'), 2800)
+}
+
+init()
+</script>
+</body>
+</html>
