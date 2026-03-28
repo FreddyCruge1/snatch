@@ -1,6 +1,6 @@
 {
   "name": "snatch",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Download videos from YouTube, Twitter, Instagram and 1000+ sites",
   "main": "main.js",
   "scripts": {
@@ -10,31 +10,16 @@
   "build": {
     "appId": "com.snatch.app",
     "productName": "Snatch",
-    "directories": {
-      "output": "dist"
-    },
-    "win": {
-      "target": "nsis"
-    },
+    "directories": { "output": "dist" },
+    "win": { "target": "nsis" },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "installerLanguages": ["ru_RU", "en_US"],
       "language": "1049"
     },
-    "files": [
-      "main.js",
-      "preload.js",
-      "index.html",
-      "package.json"
-    ],
-    "extraResources": [
-      {
-        "from": "bin/",
-        "to": "bin/",
-        "filter": ["**/*"]
-      }
-    ]
+    "files": ["main.js", "preload.js", "index.html", "package.json"],
+    "extraResources": [{ "from": "bin/", "to": "bin/", "filter": ["**/*"] }]
   },
   "devDependencies": {
     "electron": "^28.0.0",
